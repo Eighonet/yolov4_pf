@@ -1,5 +1,8 @@
 # YOLOv4 for Parkfinder project
 
-Did you miss me?
+To prepare the environment for inference launch, you need to install dependencies from requirements.txt and execute the install.sh script. 
 
-scripts/inference.py -- currently implemented simple_inference() function produce image with bounding boxes and save it in /darknet folder.    
+### Code
+scripts/inference.py – the currently implemented simple_inference() function generates an image with bounding boxes and saves it to the /darknet folder.  
+
+Did you miss me?
