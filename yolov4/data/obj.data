@@ -1,0 +1,4 @@
+classes = 2
+train = ../yolov4/data/train.txt
+names = ../yolov4/data/obj.names
+backup = ../yolov4/weights/
