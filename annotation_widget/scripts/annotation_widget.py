@@ -19,7 +19,7 @@ def pa_widget(markup_dir = "Downloads/parking", output_dir = ""):
 
             self.xdata = []
             self.ydata = []
-
+            
             self.annotation_dict = dict()
             self.image = ""
 
@@ -62,7 +62,9 @@ def pa_widget(markup_dir = "Downloads/parking", output_dir = ""):
             for i in range(len(annotator.axes.lines)):
                 annotator.axes.lines.pop(0)
             img = cv2.imread(markup_dir + '/' + path.value)
-
+            if path.value not in metadata:
+                metadata[path.value] = img.shape
+                
             axes.imshow(img)
             plt.axis("off")
 
@@ -93,6 +95,9 @@ def pa_widget(markup_dir = "Downloads/parking", output_dir = ""):
             for i in range(len(annotator.axes.lines)):
                 annotator.axes.lines.pop(0)
             img = cv2.imread(markup_dir + '/' + path.value)
+            if path.value not in metadata:
+                metadata[path.value] = img.shape
+            
             axes.imshow(img)
             plt.axis("off")
 
@@ -119,6 +124,9 @@ def pa_widget(markup_dir = "Downloads/parking", output_dir = ""):
     def trash_button_clicked(b):
         annotator.xdata, annotator.ydata = [], []
         img = cv2.imread(markup_dir + '/' + path.value)
+        if path.value not in metadata:
+            metadata[path.value] = img.shape
+            
         if len(annotator.axes.lines) > 0:
             if len(annotator.axes.lines) % 4 == 0:
                 annotator.annotation_dict[annotator.image].pop(-1)
@@ -132,6 +140,9 @@ def pa_widget(markup_dir = "Downloads/parking", output_dir = ""):
     def download_button_clicked(b):    
         with open(output_dir + "annotations.json", "w") as outfile:
             json.dump(annotator.annotation_dict, outfile)
+       
+        with open(output_dir + "metadata.json", "w") as outfile:
+            json.dump(metadata, outfile)
 
     def on_change(change):
         if change['type'] == 'change' and change['name'] == 'value':
@@ -146,6 +157,9 @@ def pa_widget(markup_dir = "Downloads/parking", output_dir = ""):
             for i in range(len(annotator.axes.lines)):
                 annotator.axes.lines.pop(0)
             img = cv2.imread(markup_dir + '/' + path.value)
+            if path.value not in metadata:
+                metadata[path.value] = img.shape
+            
             axes.imshow(img)
             plt.axis("off")
             shapes = annotator.annotation_dict[path.value]
@@ -162,6 +176,7 @@ def pa_widget(markup_dir = "Downloads/parking", output_dir = ""):
                
     images = [f for f in listdir(markup_dir) if isfile(join(markup_dir, f)) and f[-4:] == ".jpg"]
     images_dict = {images[i]:i for i in range(len(images))}
+    metadata = dict()
 
     selected_image = widgets.Label(value='0')
     path = widgets.Label(value=images[int(selected_image.value)])
@@ -169,6 +184,9 @@ def pa_widget(markup_dir = "Downloads/parking", output_dir = ""):
     annotatation_flag = widgets.Label(value='0')
 
     img = cv2.imread(markup_dir + '/' + path.value)
+    if path.value not in metadata:
+        metadata[path.value] = img.shape 
+        
     fig, axes = plt.subplots(figsize=(6, 6), num='Markup widget rev1')
     axes.imshow(img)
     plt.axis("off")

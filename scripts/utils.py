@@ -43,3 +43,52 @@ def write_images(input_folder: str, output_folder: str, images: list,\
         for b_box in  b_boxes: 
             image = draw_boxes(image, b_box, scale_factors)
         cv2.imwrite(output_folder + "output_" + images[i], image)
+
+def get_occupancy(detectins_path: str='yolov4/output/output.csv',\
+                  parking_annotations: str='annotation_widget/annotations.json',\
+                  image_metadata: str='annotation_widget/metadata.json', occupation_ratio: float=0.3) -> dict:
+    detections = pd.read_csv(detectins_path, index_col=0)
+
+    with open(parking_annotations, 'r') as f:
+        parking_lots = json.load(f)
+
+    with open(image_metadata, 'r') as f:
+        image_shapes = json.load(f)
+
+    detections_dict = detections.groupby('image_id')[list(detections.columns)[1:]].apply(lambda g: g.values.tolist()).to_dict()
+
+    for image in image_shapes:
+        image_detections = detections_dict[image]
+        image_shape = image_shapes[image]
+        for detection in image_detections:
+            detection[1] = int(detection[1]*image_shape[1])
+            detection[2] = int(detection[2]*image_shape[1])
+            detection[3] = int(detection[3]*image_shape[0])
+            detection[4] = int(detection[4]*image_shape[0])
+    
+    result_dict = {image:[] for image in image_shapes}
+    for image_name in image_shapes:
+        im_detections = np.array(detections_dict[image_name])[:, 1:]
+        im_lots = parking_lots[image_name]
+        
+        image = cv2.imread("annotation_widget/parking_photos/" + image_name)
+        car_boxes = []
+        
+        for i in range(len(im_detections)):
+            car_boxes.append([[int(im_detections[i][0]), int(im_detections[i][2])],\
+                              [int(im_detections[i][1]), int(im_detections[i][2])],\
+                              [int(im_detections[i][1]), int(im_detections[i][3])],\
+                              [int(im_detections[i][0]), int(im_detections[i][3])]])
+
+        for i in range(len(im_lots)):
+            pts = np.array([[im_lots[i][0][0], im_lots[i][1][0]], [im_lots[i][0][1], im_lots[i][1][1]], 
+                            [im_lots[i][0][2], im_lots[i][1][2]], [im_lots[i][0][3], im_lots[i][1][3]]])
+            occupation_flag = 0
+            for j in range(len(car_boxes)):
+                cat_poly = Polygon(car_boxes[j])
+                lot_poly = Polygon(pts)
+                if cat_poly.intersection(lot_poly).area > occupation_ratio*lot_poly.area:
+                    occupation_flag += 1
+                    break
+            result_dict[image_name].append(occupation_flag) 
+    return result_dict
