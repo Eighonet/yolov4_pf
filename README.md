@@ -16,4 +16,4 @@ A widget for annotating of parking lots images inside the Jupyter Notebook envir
 
 
 
-Did you miss me?
+*Did you miss me?*
